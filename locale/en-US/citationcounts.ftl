@@ -69,3 +69,8 @@ citationcounts-error-network =
 citationcounts-error-unknown =
     Something went wrong talking to { $source }. See the Zotero debug output for details.
 citationcounts-progress-headline = Getting { $source } citation counts
+citationcounts-summary-failed-items =
+    { $failed ->
+        [one] 1 item errored; see the debug output.
+       *[other] { $failed } items errored; see the debug output.
+    }

@@ -5,7 +5,7 @@
 // values back through <preference> element IDs, which no longer works — use
 // Zotero.Prefs.get() if you need a value in script.
 
-let CitationCountsPrefs = {
+var CitationCountsPrefs = {
 	init() {
 		// Make the API key rows searchable by provider name in the new
 		// preferences search, since the labels themselves are generic.
