@@ -1,0 +1,49 @@
+<vbox onload="CitationCountsPrefs.init()">
+	<linkset>
+		<html:link rel="localization" href="citationcounts.ftl"/>
+	</linkset>
+
+	<groupbox>
+		<label><html:h2 data-l10n-id="citationcounts-prefs-autoretrieve-title"/></label>
+		<description class="citationcounts-prefs-description"
+			data-l10n-id="citationcounts-prefs-autoretrieve-description"/>
+		<radiogroup id="citationcounts-prefs-autoretrieve"
+			preference="extensions.zotero.citationcounts.autoretrieve">
+			<radio value="none" data-l10n-id="citationcounts-prefs-autoretrieve-none"/>
+			<radio value="crossref" data-l10n-id="citationcounts-source-crossref"/>
+			<radio value="inspire" data-l10n-id="citationcounts-source-inspire"/>
+			<radio value="semanticscholar" data-l10n-id="citationcounts-source-semanticscholar"/>
+			<radio value="ads" data-l10n-id="citationcounts-source-ads"/>
+		</radiogroup>
+	</groupbox>
+
+	<groupbox>
+		<label><html:h2 data-l10n-id="citationcounts-prefs-keys-title"/></label>
+		<description class="citationcounts-prefs-description"
+			data-l10n-id="citationcounts-prefs-keys-description"/>
+
+		<hbox align="center">
+			<label control="citationcounts-prefs-ads-key"
+				data-l10n-id="citationcounts-prefs-ads-key"/>
+			<html:input type="text" id="citationcounts-prefs-ads-key"
+				style="flex: 1"
+				preference="extensions.zotero.citationcounts.adsApiKey"/>
+		</hbox>
+
+		<hbox align="center">
+			<label control="citationcounts-prefs-s2-key"
+				data-l10n-id="citationcounts-prefs-s2-key"/>
+			<html:input type="text" id="citationcounts-prefs-s2-key"
+				style="flex: 1"
+				preference="extensions.zotero.citationcounts.semanticScholarApiKey"/>
+		</hbox>
+
+		<hbox align="center">
+			<label control="citationcounts-prefs-crossref-mailto"
+				data-l10n-id="citationcounts-prefs-crossref-mailto"/>
+			<html:input type="email" id="citationcounts-prefs-crossref-mailto"
+				style="flex: 1"
+				preference="extensions.zotero.citationcounts.crossrefMailto"/>
+		</hbox>
+	</groupbox>
+</vbox>
