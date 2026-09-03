@@ -1,0 +1,81 @@
+name: Release
+
+# Triggered by pushing a tag: git tag v2.0.1 && git push origin v2.0.1
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+
+      - run: pip install --quiet fluent.syntax
+
+      - name: Refuse to release a build that fails its own checks
+        run: |
+          sh bin/validate.sh
+          node test/test.js
+
+      - name: Tag must match the manifest version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          MANIFEST=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
+          if [ "$TAG" != "$MANIFEST" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match manifest.json version $MANIFEST"
+            exit 1
+          fi
+          echo "VERSION=$MANIFEST" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: sh bin/build.sh
+
+      - name: Record the hash in updates.json
+        run: |
+          XPI="zotero-citationcounts-${VERSION}.xpi"
+          HASH="sha256:$(sha256sum "$XPI" | cut -d' ' -f1)"
+          LINK="https://github.com/${GITHUB_REPOSITORY}/releases/download/v${VERSION}/${XPI}"
+          python3 - "$VERSION" "$HASH" "$LINK" <<'PY'
+          import json, sys
+          version, digest, link = sys.argv[1:4]
+          data = json.load(open('updates.json'))
+          plugin_id = json.load(open('manifest.json'))['applications']['zotero']['id']
+          entry = next(e for e in data['addons'][plugin_id]['updates']
+                       if e['version'] == version)
+          entry['update_link'] = link
+          entry['update_hash'] = digest
+          json.dump(data, open('updates.json', 'w'), indent='\t')
+          open('updates.json', 'a').write('\n')
+          PY
+
+      - name: Commit updates.json to master
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet updates.json; then
+            git add updates.json
+            git commit -m "Record ${VERSION} in updates.json"
+            git push origin master
+          fi
+
+      - name: Publish the release
+        # gh is preinstalled on the runner, so this avoids granting a
+        # third-party action the contents:write token this job holds.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "zotero-citationcounts-${VERSION}.xpi" \
+            --title "v${VERSION}" \
+            --generate-notes

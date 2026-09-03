@@ -1,0 +1,46 @@
+name: Zotero compatibility watch
+
+on:
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare latest Zotero release against strict_max_version
+        id: compat
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # VERIFY THIS ONCE: confirm the tag format matches what zotero/zotero
+          # actually publishes before trusting this to stay silent.
+          LATEST=$(gh api repos/zotero/zotero/tags --jq '.[].name' \
+            | grep -oE '^[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V | tail -1)
+          MAX=$(python3 -c "import json;print(json.load(open('manifest.json'))['applications']['zotero']['strict_max_version'])")
+          echo "latest=$LATEST"  >> "$GITHUB_OUTPUT"
+          echo "max=$MAX"        >> "$GITHUB_OUTPUT"
+          LATEST_MAJOR=${LATEST%%.*}
+          MAX_MAJOR=${MAX%%.*}
+          [ "$LATEST_MAJOR" -gt "$MAX_MAJOR" ] && echo "stale=true" >> "$GITHUB_OUTPUT" || true
+
+      - name: Open an issue
+        if: steps.compat.outputs.stale == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue list --state open --label zotero-compat --json title \
+            --jq '.[].title' | grep -q "Zotero ${{ steps.compat.outputs.latest }}" && exit 0
+          gh issue create \
+            --label zotero-compat \
+            --title "Zotero ${{ steps.compat.outputs.latest }} is out; strict_max_version is ${{ steps.compat.outputs.max }}" \
+            --body "Test the plugin against the new release, then raise \`strict_max_version\` in manifest.json and updates.json.
+
+          Check the \"Zotero N for Developers\" page for API changes before assuming it still works: https://www.zotero.org/support/dev/"

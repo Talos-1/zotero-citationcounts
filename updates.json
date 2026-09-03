@@ -1,0 +1,18 @@
+{
+	"addons": {
+		"schnetter@gmail.com": {
+			"updates": [
+				{
+					"version": "2.0.0",
+					"update_link": "https://github.com/Talos-1/zotero-citationcounts/releases/download/v2.0.0/zotero-citationcounts-2.0.0.xpi",
+					"applications": {
+						"zotero": {
+							"strict_min_version": "8.0",
+							"strict_max_version": "10.0.*"
+						}
+					}
+				}
+			]
+		}
+	}
+}
